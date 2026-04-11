@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { RagController } from './rag.controller';
 import { RagService } from './rag.service';
 import { SessionModule } from '../session/session.module';
 
@@ -9,6 +10,7 @@ import { SessionModule } from '../session/session.module';
  */
 @Module({
   imports: [ConfigModule, SessionModule],
+  controllers: [RagController],
   providers: [RagService],
   exports: [RagService],
 })
