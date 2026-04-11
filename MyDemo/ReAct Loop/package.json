@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@zilliz/milvus2-sdk-node": "^2.6.13",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0"
+  }
+}
