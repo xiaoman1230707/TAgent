@@ -5,6 +5,9 @@ import { LlmModule } from './llm/llm.module';
 import { RagModule } from './rag/rag.module';
 import { RouterModule } from './router/router.module';
 import { SessionModule } from './session/session.module';
+import { AgentModule } from './agent/agent.module';
+import { DbQueryModule } from './db-query/db-query.module';
+import { IntentModule } from './intent/intent.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { SessionModule } from './session/session.module';
     ChatModule,
     RagModule,
     RouterModule,
+    AgentModule,
+    DbQueryModule,
+    IntentModule,
   ],
 })
 export class AppModule {}

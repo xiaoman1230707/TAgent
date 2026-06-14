@@ -82,23 +82,32 @@ export class DbQueryService implements OnModuleInit {
         output_fields: ['id', 'book_id', 'book_name', 'chapter_num', 'index', 'content'],
       });
 
-      // 4. 格式化结果
-      const results: DbQueryResult[] = searchResult.results.map((item) => ({
-        id: String(item.id),
-        book_id: String(item.book_id),
-        book_name: String(item.book_name || '天龙八部'),
-        chapter_num: Number(item.chapter_num),
-        index: Number(item.index),
-        content: String(item.content),
-        score: Number(item.score),
-      }));
+      // 4. 格式化结果并按分数降序排序
+      const results: DbQueryResult[] = searchResult.results
+        .map((item) => ({
+          id: String(item.id),
+          book_id: String(item.book_id),
+          book_name: String(item.book_name || '天龙八部'),
+          chapter_num: Number(item.chapter_num),
+          index: Number(item.index),
+          content: String(item.content),
+          score: Number(item.score),
+        }))
+        .sort((a, b) => b.score - a.score);
 
-      console.log(`[DB Query] 查询完成，返回 ${results.length} 条结果`);
+      // 5. 过滤只保留最相关的结果
+      const filteredResults = this.filterMostRelevant(results, {
+        maxDropRatio: 0.3,  // 相对最高分下降不超过30%
+        minScore: 0.5,      // 最低绝对分数0.5
+        maxResults: 3,      // 最多返回3条
+      });
+
+      console.log(`[DB Query] 查询完成，原始 ${results.length} 条，过滤后 ${filteredResults.length} 条`);
 
       return {
         query,
-        count: results.length,
-        results,
+        count: filteredResults.length,
+        results: filteredResults,
       };
     } catch (error) {
       console.error('[DB Query] 查询失败:', error.message);
@@ -117,5 +126,40 @@ export class DbQueryService implements OnModuleInit {
     } catch (err) {
       // 集合可能已加载，忽略错误
     }
+  }
+
+  /**
+   * 过滤只保留最相关的结果
+   * 基于相对分数下降和绝对阈值过滤
+   */
+  private filterMostRelevant(
+    results: DbQueryResult[],
+    options: {
+      maxDropRatio: number;  // 相对下降比例阈值（如0.3表示30%）
+      minScore: number;      // 最低绝对分数
+      maxResults: number;    // 最大返回数量
+    },
+  ): DbQueryResult[] {
+    if (results.length === 0) return [];
+
+    const { maxDropRatio, minScore, maxResults } = options;
+    const topScore = results[0].score;
+    const filtered: DbQueryResult[] = [];
+
+    for (const result of results) {
+      // 检查绝对阈值
+      if (result.score < minScore) break;
+
+      // 检查相对下降阈值
+      const dropRatio = (topScore - result.score) / topScore;
+      if (dropRatio > maxDropRatio) break;
+
+      // 检查最大数量
+      if (filtered.length >= maxResults) break;
+
+      filtered.push(result);
+    }
+
+    return filtered;
   }
 }
